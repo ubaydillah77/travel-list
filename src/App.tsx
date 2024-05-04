@@ -23,6 +23,10 @@ interface ItemProps {
   onChangeItem: (id: number, packed: boolean) => void;
 }
 
+interface StatsProps {
+  items: PackingItem[];
+}
+
 export default function App() {
   const [items, setItems] = useState<PackingItem[]>([]);
 
@@ -54,7 +58,7 @@ export default function App() {
         onDeleteItem={handleDeleteItem}
         onChangeItem={handleChangeItem}
       />
-      <Stats />
+      <Stats items={items} />
     </div>
   );
 }
@@ -154,10 +158,24 @@ const Item: React.FC<ItemProps> = ({ item, onDeleteItem, onChangeItem }) => {
   );
 };
 
-function Stats() {
+const Stats: React.FC<StatsProps> = ({ items }) => {
+  const totalItems = items.length;
+  const checkedItem = items.filter((item) => item.packed).length;
+  const packedPercentage = Number((checkedItem / totalItems) * 100);
+  console.log(typeof packedPercentage);
+
   return (
     <footer className='stats'>
-      <em>You have X items on your lists, and you already packed X (X%)</em>
+      <em>
+        {packedPercentage >= 100 ? (
+          <span>You are ready to go! ✈️</span>
+        ) : (
+          <span>
+            🧳You have {totalItems} items on your lists, and you already packed{' '}
+            {checkedItem} ({isNaN(packedPercentage) ? 0 : packedPercentage}%)
+          </span>
+        )}
+      </em>
     </footer>
   );
-}
+};
