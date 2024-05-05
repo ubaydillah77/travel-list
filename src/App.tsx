@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { PackingItem } from './types';
 import Logo from './Logo';
 import Stats from './Stats';
@@ -6,7 +6,14 @@ import Form from './Form';
 import PackingList from './PackingList';
 
 export default function App() {
-  const [items, setItems] = useState<PackingItem[]>([]);
+  const [items, setItems] = useState<PackingItem[]>(() => {
+    const storedItems = localStorage.getItem('packingItems');
+    return storedItems ? JSON.parse(storedItems) : [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem('packingItems', JSON.stringify(items));
+  }, [items]);
 
   const handleAddItem = (item: PackingItem) => {
     setItems((prevValue) => [...prevValue, item]);
