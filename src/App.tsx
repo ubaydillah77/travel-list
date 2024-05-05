@@ -11,6 +11,7 @@ interface PackingListProps {
   items: PackingItem[];
   onDeleteItem: (id: number) => void;
   onChangeItem: (id: number, packed: boolean) => void;
+  onResetItem: () => void;
 }
 
 interface FormProps {
@@ -49,6 +50,12 @@ export default function App() {
     setItems(updateItems);
   };
 
+  const handleResetItem = () => {
+    if (window.confirm('Are you sure want to reset?')) {
+      setItems([]);
+    }
+  };
+
   return (
     <div className='app'>
       <Logo />
@@ -57,6 +64,7 @@ export default function App() {
         items={items}
         onDeleteItem={handleDeleteItem}
         onChangeItem={handleChangeItem}
+        onResetItem={handleResetItem}
       />
       <Stats items={items} />
     </div>
@@ -121,11 +129,26 @@ const PackingList: React.FC<PackingListProps> = ({
   items,
   onDeleteItem,
   onChangeItem,
+  onResetItem,
 }) => {
+  const [sortBy, setSortBy] = useState('input');
+
+  let sortedItems: PackingItem[] = items; // Initialize with a default value
+
+  if (sortBy === 'description') {
+    sortedItems = items
+      .slice()
+      .sort((a, b) => a.description.localeCompare(b.description));
+  } else if (sortBy === 'packed') {
+    sortedItems = items
+      .slice()
+      .sort((a, b) => Number(b.packed) - Number(a.packed));
+  }
+
   return (
     <div className='list'>
       <ul>
-        {items.map((item) => (
+        {sortedItems.map((item) => (
           <Item
             item={item}
             key={item.id}
@@ -134,6 +157,15 @@ const PackingList: React.FC<PackingListProps> = ({
           />
         ))}
       </ul>
+
+      <div className='actions'>
+        <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+          <option value='input'>Sorted by Input</option>
+          <option value='description'>Sorted by Description</option>
+          <option value='packed'>Sorted by Packed</option>
+        </select>
+        <button onClick={onResetItem}>Clear list</button>
+      </div>
     </div>
   );
 };
@@ -159,10 +191,17 @@ const Item: React.FC<ItemProps> = ({ item, onDeleteItem, onChangeItem }) => {
 };
 
 const Stats: React.FC<StatsProps> = ({ items }) => {
+  if (!items.length) {
+    return (
+      <footer className='stats'>
+        <em>Start adding some items to your packing list!</em>
+      </footer>
+    );
+  }
+
   const totalItems = items.length;
   const checkedItem = items.filter((item) => item.packed).length;
-  const packedPercentage = Number((checkedItem / totalItems) * 100);
-  console.log(typeof packedPercentage);
+  const packedPercentage = Math.round((checkedItem / totalItems) * 100);
 
   return (
     <footer className='stats'>
